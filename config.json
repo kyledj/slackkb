@@ -1,0 +1,5 @@
+{
+    "channel": "#killboard",
+    "zkurl": "https://zkillboard.com/api/corporationID/98170031/",
+    "slackbot_url": ""
+}
