@@ -6,7 +6,7 @@ In the simplest case:
 
 ```bash
 go build slackkb.go
-./slackkb.go
+./slackkb
 ```
 
 This will use the default `config.json` file.
@@ -48,10 +48,10 @@ Specify the path to the config file
 
 `-ignore=ignore.txt`
 
-Specify the path to a list of systems which should be ignored. These were
-included for our case to ignore BRAVE home system spam. An example of the
-SQL used to query the static DB for these systems is included in
-`getignored.sql`
+Specify the path to a newline-delimited list of system IDs which should
+be ignored. These were included for our case to ignore BRAVE home
+system spam. An example of the SQL used to query the static DB for 
+these systems is included in `getignored.sql`
 
 Note that kills over 1 billion isk (if zkb provides the value) will be included
 regardless of ignore status, because those are awesome.

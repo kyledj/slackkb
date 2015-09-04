@@ -47,8 +47,8 @@ func main() {
 		log.Fatalf("error validating config: %v", err)
 	}
 
-	firstrun := true
 	kc := NewKillCache()
+	firstrun := true
 	ignored := readignored(*IgnorePath)
 	for {
 		if !firstrun {
@@ -84,7 +84,7 @@ func main() {
 				log.Printf("in cache: %s", k.KillID)
 				continue
 			}
-			log.Printf("not in cache or ignored. KillID:%s  SystemID:%s", k.KillID, k.SystemID)
+			log.Printf("not cached or ignored. sending KillID:%s  SystemID:%s", k.KillID, k.SystemID)
 			filtered = append(filtered, k)
 		}
 
@@ -142,12 +142,20 @@ func NewKillCache() *KillCache {
 }
 
 // KillCache keeps around the kills we have already seen so we don't double-post
-// We want to pull kills for a window before "now", and we want to keep that window overlapped so we
-// don't miss previous kills. This lets use do that.
+// There are two main purposes for the cache: startup and overlapping time page GETs
+// When we startup, the cache is populated with all the kills available, so we
+// only post new kills without spamming slack
+// The second purpose is so we can retrieve kills which aren't necessarily available within
+// the five minute window, (kills occasionally show up "late".) We do a get for the last
+// hour every five minutes, so there are 55 minutes of overlapping time. We only want to
+// post kills from that last 55 minutes if we haven't already seen it.
 type KillCache struct {
 	cache map[string]time.Time
 }
 
+// Check will return true if the key is already in the cache, and will
+// include the key in the cache with the specified time and return false
+// otherwise
 func (kc *KillCache) Check(key string, ts time.Time) bool {
 	_, ok := kc.cache[key]
 	if ok {
@@ -158,6 +166,7 @@ func (kc *KillCache) Check(key string, ts time.Time) bool {
 	return false
 }
 
+// Evict removes all entries whose timestamps are before the provided time
 func (kc *KillCache) Evict(before time.Time) {
 	del := []string{}
 	for k, v := range kc.cache {
